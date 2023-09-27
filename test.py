@@ -1,53 +1,83 @@
-import cv2
-import sys
-import os
-import numpy as np
+# ReadMe.md
+# To find a missing bracket and check for duplicate method names in Java code using Python. 
+# command to run the script  "Python3 test.py"
 
-videoPath = sys.argv[1]
-print("V: ",videoPath )
-cap = cv2.VideoCapture(videoPath)
+# In sample java code, we can remove any closing bracket and test, it will indicate the missing bracket with Index position:
 
-# so, convert them from float to integer. 
-frame_width = int(cap.get(3)) 
-frame_height = int(cap.get(4)) 
-   
-size = (frame_width, frame_height) 
+# Sample output
+"""Missing bracket at index 19: {
+Duplicate method found: void printMessage"""
 
-result = cv2.VideoWriter('filename.avi',  
-                         cv2.VideoWriter_fourcc(*'XVID'), 
-                         10, size) 
-                         
-                         
 
-while(True): 
-    ret, frame = cap.read() 
-  
-    if ret == True:  
-  
-        # Write the frame into the 
-        # file 'filename.avi' 
-        result.write(frame) 
-  
-        # Display the frame 
-        # saved in the file 
-        cv2.imshow('Frame', frame) 
-  
-        # Press S on keyboard  
-        # to stop the process 
-        if cv2.waitKey(1) & 0xFF == ord('s'): 
-            break
-  
-    # Break the loop 
-    else: 
-        break
-  
-# When everything done, release  
-# the video capture and video  
-# write objects 
-cap.release() 
-result.release() 
+
+import re
+
+# Example usage:
+java_code = """
+public class Main {
+    public void printMessage() {
+        System.out.println("Hello, World!");
+    }
     
-# Closes all the frames 
-cv2.destroyAllWindows() 
-   
-print("The video was successfully saved") 
+    public void printMessage() {
+        System.out.println("Duplicate method!");
+    }
+    
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            if (i % 2 == 0) {
+                System.out.println(i);
+            }
+        }
+    }
+}
+"""
+
+
+# Method for finding missing brackets
+def find_missing_bracket(java_code):
+    stack = []
+    pattern = r'[{}]'
+
+    for match in re.finditer(pattern, java_code):
+        char = match.group()
+        if char == '{':
+            stack.append(match.start())
+        elif char == '}':
+            if not stack:
+                return match.start()
+            stack.pop()
+
+    if stack:
+        return stack[-1]
+    else:
+        return None
+
+# Method for checking duplicate method names
+def find_duplicate_method_names(java_code):
+    method_names = set()
+    pattern = r'(\w+)\s+(\w+)\s*\([^)]*\)\s*\{'
+
+    for match in re.finditer(pattern, java_code):
+        access_modifier, return_type = match.group(1, 2)
+        method_signature = f"{access_modifier} {return_type}"
+        if method_signature in method_names:
+            return method_signature
+        method_names.add(method_signature)
+
+    return None
+
+
+
+missing_bracket_index = find_missing_bracket(java_code)
+if missing_bracket_index is not None:
+    print(f"Missing bracket at index {missing_bracket_index}: {java_code[missing_bracket_index]}")
+else:
+    print("No missing brackets found.")
+
+duplicate_method = find_duplicate_method_names(java_code)
+if duplicate_method is not None:
+    print(f"Duplicate method found: {duplicate_method}")
+else:
+    print("No duplicate methods found.")
+
